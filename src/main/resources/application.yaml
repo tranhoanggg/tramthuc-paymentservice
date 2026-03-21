@@ -2,7 +2,7 @@
 # 1. SERVER CONFIGURATION (Chạy cổng 8082)
 # ==========================================
 server:
-  port: 8082
+  port: 8081
 
 spring:
   application:
