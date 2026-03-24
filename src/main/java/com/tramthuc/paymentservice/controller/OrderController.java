@@ -50,14 +50,19 @@ public class OrderController {
 
         // 3. Xử lý logic
         Long orderId = Long.parseLong(orderIdStr);
+        String frontendSuccessUrl = "http://localhost:3000/orders/success";
         if ("00".equals(responseCode)) {
             // Mã "00" của VNPay nghĩa là thanh toán thành công
             orderService.updateOrderStatus(orderId, "PAID");
-            return ResponseEntity.ok(ApiResponse.success("Thanh toán thành công!", null));
+            return ResponseEntity.status(302)
+                .location(java.net.URI.create(frontendSuccessUrl + "?status=success&orderId=" + orderIdStr))
+                .build();
         } else {
             // Các mã khác là thất bại/hủy
             orderService.updateOrderStatus(orderId, "FAILED");
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "Giao dịch thất bại hoặc đã bị hủy."));
+            return ResponseEntity.status(302)
+                .location(java.net.URI.create(frontendSuccessUrl + "?status=error&message=PaymentFailed"))
+                .build();
         }
     }
 
