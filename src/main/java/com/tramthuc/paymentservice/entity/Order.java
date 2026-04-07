@@ -39,8 +39,13 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
-    @Column(nullable = false)
-    private String status;
+    // 1. TRẠNG THÁI THANH TOÁN (UNPAID, PAID, REFUND_REQUESTED, REFUNDED)
+    @Column(name = "payment_status", nullable = false)
+    private String paymentStatus;
+
+    // 2. TRẠNG THÁI GIAO HÀNG (CREATED, SHIPPING, COMPLETED, CANCELLED)
+    @Column(name = "delivery_status", nullable = false)
+    private String deliveryStatus;
 
     @Column(nullable = false)
     private String paymentMethod;
@@ -56,6 +61,13 @@ public class Order {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        
+        if (this.deliveryStatus == null) {
+            this.deliveryStatus = "CREATED"; 
+        }
+        if (this.paymentStatus == null) {
+            this.paymentStatus = "UNPAID"; 
+        }
     }
 
     @PreUpdate

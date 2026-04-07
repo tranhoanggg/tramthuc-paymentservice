@@ -44,7 +44,9 @@ public class OrderService {
                 .customerPhone(request.getCustomerPhone())
                 .shippingAddress(request.getShippingAddress())
                 .paymentMethod(method)
-                .status("PENDING") 
+                // CẬP NHẬT: Thay thế "status" bằng 2 trường riêng biệt
+                .paymentStatus("UNPAID") 
+                .deliveryStatus("CREATED") 
                 .totalAmount(BigDecimal.ZERO) 
                 .build();
 
@@ -97,17 +99,25 @@ public class OrderService {
                 .build();
     }
 
+    // CẬP NHẬT: Tách hàm update trạng thái thành 2 hàm độc lập cho Thanh toán và Giao hàng
     @Transactional
-    public void updateOrderStatus(Long orderId, String status) {
+    public void updatePaymentStatus(Long orderId, String paymentStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("error.order.not_found"));
-        order.setStatus(status);
+        order.setPaymentStatus(paymentStatus);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void updateDeliveryStatus(Long orderId, String deliveryStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("error.order.not_found"));
+        order.setDeliveryStatus(deliveryStatus);
         orderRepository.save(order);
     }
 
     // 1. Hàm lấy danh sách đơn hàng của một User
     public List<Order> getUserOrders(Long userId) {
-        // Gọi lại đúng cái hàm mà chúng ta đã vất vả cấu hình trong OrderRepository
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
@@ -127,13 +137,13 @@ public class OrderService {
             throw new RuntimeException("error.order.not_cod_method");
         }
 
-        // Chỉ cho phép thanh toán nếu đơn đang ở trạng thái PENDING
-        if (!"PENDING".equals(order.getStatus())) {
+        // CẬP NHẬT: Kiểm tra xem đơn hàng đã được thanh toán chưa dựa vào paymentStatus
+        if (!"UNPAID".equals(order.getPaymentStatus())) {
             throw new RuntimeException("error.order.already_processed");
         }
 
-        // Đổi trạng thái và lưu lại
-        order.setStatus("PAID");
+        // CẬP NHẬT: Đổi trạng thái thanh toán và lưu lại
+        order.setPaymentStatus("PAID");
         return orderRepository.save(order);
     }
 }
