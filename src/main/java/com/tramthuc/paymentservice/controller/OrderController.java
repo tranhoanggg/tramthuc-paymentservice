@@ -83,4 +83,31 @@ public class OrderController {
         Order order = orderService.completeCodOrder(orderId, userId);
         return ResponseEntity.ok(ApiResponse.success("Xác nhận thanh toán COD thành công!", order));
     }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<Order>> getOrderDetails(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
+        
+        Order order = orderService.getOrderDetails(orderId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết đơn hàng thành công!", order));
+    }
+
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<ApiResponse<Order>> cancelOrder(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
+        
+        Order order = orderService.cancelOrder(orderId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Hủy đơn hàng thành công!", order));
+    }
+
+    @PutMapping("/{orderId}/received")
+    public ResponseEntity<ApiResponse<Order>> confirmReceived(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
+        
+        Order order = orderService.confirmReceived(orderId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Xác nhận nhận hàng thành công!", order));
+    }
 }

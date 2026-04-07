@@ -146,4 +146,75 @@ public class OrderService {
         order.setPaymentStatus("PAID");
         return orderRepository.save(order);
     }
+
+    // 1. Lấy chi tiết 1 đơn hàng cụ thể
+    public Order getOrderDetails(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại!"));
+                
+        // Xác thực: Chỉ chủ nhân đơn hàng mới được xem
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền truy cập đơn hàng này!");
+        }
+        return order;
+    }
+
+    // 2. Hủy đơn hàng
+    @Transactional
+    public Order cancelOrder(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại!"));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền thao tác trên đơn hàng này!");
+        }
+
+        // Chỉ cho phép hủy khi đơn hàng đang ở trạng thái mới tạo (CREATED)
+        if (!"CREATED".equals(order.getDeliveryStatus())) {
+            throw new RuntimeException("Không thể hủy đơn hàng đã được xử lý hoặc giao hàng!");
+        }
+
+        // 1. Hoàn lại số lượng tồn kho (Rollback stock)
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProduct();
+            product.setStock(product.getStock() + item.getQuantity());
+            productRepository.save(product);
+        }
+
+        // 2. Chuyển trạng thái giao hàng thành HỦY
+        order.setDeliveryStatus("CANCELLED");
+        
+        // 3. Nếu đã thanh toán qua VNPAY, chuyển trạng thái thành Yêu cầu hoàn tiền
+        if ("VNPAY".equals(order.getPaymentMethod()) && "PAID".equals(order.getPaymentStatus())) {
+            order.setPaymentStatus("REFUND_REQUESTED");
+        }
+
+        return orderRepository.save(order);
+    }
+
+    // 3. Xác nhận đã nhận được hàng
+    @Transactional
+    public Order confirmReceived(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại!"));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền thao tác trên đơn hàng này!");
+        }
+
+        // Chỉ cho phép nhận hàng khi trạng thái đang là SHIPPING
+        if (!"SHIPPING".equals(order.getDeliveryStatus())) {
+            throw new RuntimeException("Đơn hàng chưa trong trạng thái giao hàng!");
+        }
+
+        // Đổi trạng thái thành Hoàn thành
+        order.setDeliveryStatus("COMPLETED");
+        
+        // Nếu là đơn COD và chưa thanh toán, mặc định khách nhận hàng là đã đưa tiền cho Shipper
+        if ("COD".equals(order.getPaymentMethod()) && "UNPAID".equals(order.getPaymentStatus())) {
+             order.setPaymentStatus("PAID");
+        }
+
+        return orderRepository.save(order);
+    }
 }
