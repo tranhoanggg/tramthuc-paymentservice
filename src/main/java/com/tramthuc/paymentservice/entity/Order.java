@@ -50,6 +50,9 @@ public class Order {
     @Column(nullable = false)
     private String paymentMethod;
 
+    @Column(length = 500)
+    private String note;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

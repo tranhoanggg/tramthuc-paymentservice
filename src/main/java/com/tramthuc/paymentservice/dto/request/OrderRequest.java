@@ -21,6 +21,8 @@ public class OrderRequest {
     @NotBlank(message = "error.order.payment_method_not_null")
     private String paymentMethod;
 
+    private String note;
+
     @NotEmpty(message = "error.order.cart_empty")
     @Valid
     private List<OrderItemRequest> items; 

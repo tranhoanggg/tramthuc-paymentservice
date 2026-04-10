@@ -44,7 +44,7 @@ public class OrderService {
                 .customerPhone(request.getCustomerPhone())
                 .shippingAddress(request.getShippingAddress())
                 .paymentMethod(method)
-                // CẬP NHẬT: Thay thế "status" bằng 2 trường riêng biệt
+                .note(request.getNote())
                 .paymentStatus("UNPAID") 
                 .deliveryStatus("CREATED") 
                 .totalAmount(BigDecimal.ZERO) 
